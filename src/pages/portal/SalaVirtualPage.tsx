@@ -1,365 +1,371 @@
-import { useState } from 'react'
-import {
-  Video,
-  Mic,
-  MicOff,
-  VideoOff,
-  Phone,
-  PhoneOff,
-  MessageSquare,
-  Monitor,
-  Users,
-  Clock,
-  Link2,
-  Copy,
-  CheckCircle,
-  Plus,
-  ChevronRight,
-} from 'lucide-react'
+import { useMemo, useState } from 'react'
+import { CalendarDays, Clock3, ShieldAlert, ShieldCheck, Stethoscope, Trash2, UserRoundPlus } from 'lucide-react'
+import { currentPatient } from '@/lib/mock-data'
+import { getInitialVirtualMeetings, saveVirtualMeetings, type VirtualMeeting } from '@/lib/virtual-meetings'
 import { cn } from '@/lib/utils'
-import { upcomingAppointments } from '@/lib/mock-data'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
+import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
 
-type SessionState = 'idle' | 'waiting' | 'in-call'
+type AvailabilitySlot = {
+  date: string
+  time: string
+}
+
+type Professional = {
+  id: string
+  name: string
+  specialty: string
+  acceptedInsurances: string[]
+  availability: AvailabilitySlot[]
+}
+
+const professionals: Professional[] = [
+  {
+    id: 'PRO-101',
+    name: 'Dra. Laura Vasquez',
+    specialty: 'Clinica Medica',
+    acceptedInsurances: ['OSDE 310', 'Swiss Medical SMG20', 'Galeno Oro'],
+    availability: [
+      { date: '2026-04-03', time: '10:00' },
+      { date: '2026-04-03', time: '11:30' },
+      { date: '2026-04-04', time: '09:00' },
+    ],
+  },
+  {
+    id: 'PRO-102',
+    name: 'Dr. Martin Rodriguez',
+    specialty: 'Traumatologia',
+    acceptedInsurances: ['IOMA', 'PAMI'],
+    availability: [
+      { date: '2026-04-05', time: '15:00' },
+      { date: '2026-04-06', time: '16:30' },
+    ],
+  },
+  {
+    id: 'PRO-103',
+    name: 'Dra. Florencia Mendez',
+    specialty: 'Dermatologia',
+    acceptedInsurances: ['OSDE 310', 'Medife Plata'],
+    availability: [
+      { date: '2026-04-04', time: '14:00' },
+      { date: '2026-04-04', time: '15:00' },
+      { date: '2026-04-07', time: '10:30' },
+    ],
+  },
+]
 
 function formatDate(dateStr: string) {
   const date = new Date(dateStr + 'T00:00:00')
-  return date.toLocaleDateString('es-AR', { day: 'numeric', month: 'short' })
-}
-
-const virtualAppointments = upcomingAppointments.filter((a) => a.modality === 'virtual')
-
-function VideoCallInterface({ onEnd }: { onEnd: () => void }) {
-  const [micOn, setMicOn] = useState(true)
-  const [camOn, setCamOn] = useState(true)
-  const [elapsed] = useState('00:04')
-  const [msgOpen, setMsgOpen] = useState(false)
-  const [chat, setChat] = useState([{ sender: 'Dr. Vásquez', text: 'Buenos días, ¿cómo se ha sentido esta semana?', mine: false }])
-  const [input, setInput] = useState('')
-
-  const sendMsg = () => {
-    if (!input.trim()) return
-    setChat((c) => [...c, { sender: 'Yo', text: input, mine: true }])
-    setInput('')
-  }
-
-  return (
-    <div className="fixed inset-0 bg-foreground z-50 flex flex-col">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 px-3 sm:px-6 py-3 sm:py-4 border-b border-foreground/10">
-        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-          <div className="w-2 h-2 rounded-full bg-accent animate-pulse flex-shrink-0" />
-          <span className="text-primary-foreground font-medium text-sm sm:text-base truncate">Teleconsulta en curso</span>
-          <Badge className="bg-accent/20 text-accent border-accent/30 text-xs flex-shrink-0">{elapsed}</Badge>
-        </div>
-        <div className="text-xs sm:text-sm text-muted-foreground truncate">Dra. Laura Vásquez · Clínica Médica</div>
-      </div>
-
-      <div className="flex-1 relative flex items-center justify-center bg-foreground/95 overflow-hidden p-2 sm:p-6">
-        <div className="relative w-full max-w-3xl aspect-video bg-secondary/30 rounded-lg sm:rounded-2xl overflow-hidden">
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 sm:gap-3">
-            <div className="w-14 h-14 sm:w-20 sm:h-20 rounded-full bg-primary flex items-center justify-center text-primary-foreground text-lg sm:text-2xl font-bold">
-              LV
-            </div>
-            <p className="text-primary-foreground font-medium text-sm sm:text-base">Dra. Laura Vásquez</p>
-            <p className="text-muted-foreground text-xs sm:text-sm">Video conectado</p>
-          </div>
-          <div className="absolute bottom-2 right-2 sm:bottom-4 sm:right-4 w-20 sm:w-32 aspect-video bg-secondary rounded-lg sm:rounded-xl flex items-center justify-center border-2 border-primary">
-            {camOn ? (
-              <div className="flex flex-col items-center gap-1">
-                <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-muted-foreground/30 flex items-center justify-center text-primary-foreground text-xs font-bold">
-                  MG
-                </div>
-                <span className="text-xs text-muted-foreground hidden sm:inline">Tú</span>
-              </div>
-            ) : (
-              <VideoOff className="w-5 h-5 sm:w-6 sm:h-6 text-muted-foreground" />
-            )}
-          </div>
-        </div>
-
-        {msgOpen && (
-          <div className="absolute top-0 right-0 h-full w-full sm:w-80 bg-foreground/80 border-l border-foreground/10 flex flex-col">
-            <div className="px-4 py-3 border-b border-foreground/10">
-              <p className="text-primary-foreground font-medium text-sm">Chat de sesión</p>
-            </div>
-            <div className="flex-1 overflow-y-auto p-4 space-y-3">
-              {chat.map((msg, i) => (
-                <div key={i} className={cn('flex flex-col', msg.mine ? 'items-end' : 'items-start')}>
-                  <span className="text-xs text-muted-foreground mb-1">{msg.sender}</span>
-                  <div
-                    className={cn(
-                      'rounded-xl px-3 py-2 text-sm max-w-[85%]',
-                      msg.mine ? 'bg-primary text-primary-foreground' : 'bg-secondary/30 text-primary-foreground'
-                    )}
-                  >
-                    {msg.text}
-                  </div>
-                </div>
-              ))}
-            </div>
-            <div className="p-3 border-t border-foreground/10 flex gap-2">
-              <input
-                className="flex-1 bg-secondary/20 rounded-lg px-3 py-2 text-sm text-primary-foreground placeholder:text-muted-foreground outline-none"
-                placeholder="Escribir mensaje..."
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && sendMsg()}
-              />
-              <button
-                onClick={sendMsg}
-                className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-primary-foreground"
-              >
-                <ChevronRight className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-        )}
-      </div>
-
-      <div className="flex items-center justify-center gap-2 sm:gap-3 px-2 sm:px-6 py-3 sm:py-5 border-t border-foreground/10 overflow-x-auto">
-        <button
-          onClick={() => setMicOn(!micOn)}
-          className={cn(
-            'w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center transition-colors flex-shrink-0',
-            micOn ? 'bg-secondary/30 text-primary-foreground hover:bg-secondary/50' : 'bg-destructive text-primary-foreground'
-          )}
-          aria-label={micOn ? 'Silenciar micrófono' : 'Activar micrófono'}
-        >
-          {micOn ? <Mic className="w-4 h-4 sm:w-5 sm:h-5" /> : <MicOff className="w-4 h-4 sm:w-5 sm:h-5" />}
-        </button>
-        <button
-          onClick={() => setCamOn(!camOn)}
-          className={cn(
-            'w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center transition-colors flex-shrink-0',
-            camOn ? 'bg-secondary/30 text-primary-foreground hover:bg-secondary/50' : 'bg-destructive text-primary-foreground'
-          )}
-          aria-label={camOn ? 'Apagar cámara' : 'Encender cámara'}
-        >
-          {camOn ? <Video className="w-4 h-4 sm:w-5 sm:h-5" /> : <VideoOff className="w-4 h-4 sm:w-5 sm:h-5" />}
-        </button>
-        <button
-          className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-secondary/30 text-primary-foreground hover:bg-secondary/50 flex items-center justify-center flex-shrink-0 hidden sm:flex"
-          aria-label="Compartir pantalla"
-        >
-          <Monitor className="w-4 h-4 sm:w-5 sm:h-5" />
-        </button>
-        <button
-          onClick={() => setMsgOpen(!msgOpen)}
-          className={cn(
-            'w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center transition-colors flex-shrink-0',
-            msgOpen ? 'bg-accent text-accent-foreground' : 'bg-secondary/30 text-primary-foreground hover:bg-secondary/50'
-          )}
-          aria-label="Abrir chat"
-        >
-          <MessageSquare className="w-4 h-4 sm:w-5 sm:h-5" />
-        </button>
-        <button
-          onClick={onEnd}
-          className="w-10 h-10 sm:w-14 sm:h-12 rounded-full bg-destructive text-primary-foreground flex items-center justify-center hover:bg-destructive/90 flex-shrink-0"
-          aria-label="Finalizar llamada"
-        >
-          <PhoneOff className="w-4 h-4 sm:w-5 sm:h-5" />
-        </button>
-      </div>
-    </div>
-  )
-}
-
-function WaitingRoom({ onJoin, onBack }: { onJoin: () => void; onBack: () => void }) {
-  const appt = virtualAppointments[0]
-  return (
-    <Card className="max-w-lg mx-auto border-border shadow-none">
-      <CardContent className="p-4 sm:p-8 flex flex-col items-center text-center gap-5">
-        <div className="w-16 h-16 rounded-full bg-accent/10 flex items-center justify-center">
-          <div className="w-4 h-4 rounded-full bg-accent animate-pulse" />
-        </div>
-        <div>
-          <h2 className="font-serif text-xl font-bold text-foreground">Sala de espera virtual</h2>
-          <p className="text-muted-foreground text-sm mt-1">Conectado — esperando al profesional</p>
-        </div>
-        <div className="w-full bg-muted rounded-xl p-4 text-left space-y-2">
-          <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Tu turno</p>
-          <p className="font-semibold text-foreground">{appt?.doctor}</p>
-          <p className="text-sm text-muted-foreground">{appt?.specialty}</p>
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <Clock className="w-3.5 h-3.5" />
-            {appt?.time} hs
-          </div>
-        </div>
-        <div className="flex items-center gap-1 text-xs text-accent">
-          <div className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
-          El profesional ingresará en breve
-        </div>
-        <div className="flex gap-3 w-full">
-          <Button variant="outline" className="flex-1 border-border text-foreground hover:bg-muted" onClick={onBack}>
-            Cancelar
-          </Button>
-          <Button className="flex-1 bg-accent text-accent-foreground hover:bg-accent/90" onClick={onJoin}>
-            <Video className="w-4 h-4 mr-2" />
-            Ingresar ahora
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
-  )
+  return date.toLocaleDateString('es-AR', { weekday: 'short', day: '2-digit', month: 'short' })
 }
 
 export function SalaVirtualPage() {
-  const [state, setState] = useState<SessionState>('idle')
-  const [copied, setCopied] = useState(false)
-  const sessionCode = 'HG-2026-8952'
+  const [selectedProfessionalId, setSelectedProfessionalId] = useState('')
+  const [selectedDate, setSelectedDate] = useState('')
+  const [selectedTime, setSelectedTime] = useState('')
+  const [reason, setReason] = useState('')
+  const [statusMessage, setStatusMessage] = useState('')
+  const [meetings, setMeetings] = useState<VirtualMeeting[]>(() => getInitialVirtualMeetings())
 
-  const handleCopy = () => {
-    navigator.clipboard.writeText(sessionCode).catch(() => {})
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
+  const selectedProfessional = useMemo(
+    () => professionals.find((professional) => professional.id === selectedProfessionalId),
+    [selectedProfessionalId]
+  )
+
+  const availableDates = useMemo(() => {
+    if (!selectedProfessional) return []
+    return [...new Set(selectedProfessional.availability.map((slot) => slot.date))]
+  }, [selectedProfessional])
+
+  const availableTimes = useMemo(() => {
+    if (!selectedProfessional || !selectedDate) return []
+
+    const bookedTimesForProfessional = meetings
+      .filter(
+        (meeting) => meeting.professional === selectedProfessional.name && meeting.date === selectedDate
+      )
+      .map((meeting) => meeting.time)
+
+    return selectedProfessional.availability
+      .filter((slot) => slot.date === selectedDate)
+      .filter((slot) => !bookedTimesForProfessional.includes(slot.time))
+      .map((slot) => slot.time)
+  }, [meetings, selectedDate, selectedProfessional])
+
+  const insuranceMatch =
+    !!selectedProfessional && selectedProfessional.acceptedInsurances.includes(currentPatient.obraSocial)
+
+  const availabilityMatch =
+    !!selectedProfessional &&
+    selectedProfessional.availability.some((slot) => slot.date === selectedDate && slot.time === selectedTime)
+
+  const alreadyBookedMatch =
+    !!selectedProfessional &&
+    meetings.some(
+      (meeting) =>
+        meeting.professional === selectedProfessional.name &&
+        meeting.date === selectedDate &&
+        meeting.time === selectedTime
+    )
+
+  const canSchedule =
+    !!selectedProfessional &&
+    !!selectedDate &&
+    !!selectedTime &&
+    insuranceMatch &&
+    availabilityMatch &&
+    !alreadyBookedMatch
+
+  const resetDateAndTime = () => {
+    setSelectedDate('')
+    setSelectedTime('')
   }
 
-  if (state === 'in-call') return <VideoCallInterface onEnd={() => setState('idle')} />
+  const handleSchedule = () => {
+    if (!selectedProfessional) {
+      setStatusMessage('Primero elegi un profesional.')
+      return
+    }
 
-  if (state === 'waiting') {
-    return (
-      <div>
-        <div className="mb-8">
-          <p className="text-sm text-muted-foreground font-medium uppercase tracking-wider mb-1">Portal del Paciente</p>
-          <h1 className="font-serif text-3xl font-bold text-foreground text-balance">Sala Virtual</h1>
-        </div>
-        <WaitingRoom onJoin={() => setState('in-call')} onBack={() => setState('idle')} />
-      </div>
-    )
+    if (!insuranceMatch) {
+      setStatusMessage('No se puede agendar: la obra social del cliente no esta cubierta por este profesional.')
+      return
+    }
+
+    if (!availabilityMatch) {
+      setStatusMessage('No se puede agendar: el horario elegido no esta disponible.')
+      return
+    }
+
+    if (alreadyBookedMatch) {
+      setStatusMessage('No se puede agendar: ese profesional ya tiene una reunion en ese horario.')
+      return
+    }
+
+    const newMeeting: VirtualMeeting = {
+      id: `TUR-${Date.now()}`,
+      professional: selectedProfessional.name,
+      specialty: selectedProfessional.specialty,
+      date: selectedDate,
+      time: selectedTime,
+      status: 'confirmada',
+    }
+
+    setMeetings((current) => {
+      const updatedMeetings = [newMeeting, ...current]
+      saveVirtualMeetings(updatedMeetings)
+      return updatedMeetings
+    })
+    setReason('')
+    setStatusMessage('Reunion agendada con exito. Coinciden disponibilidad y cobertura de obra social.')
+
+    setSelectedProfessionalId('')
+    resetDateAndTime()
+  }
+
+  const handleDeleteMeeting = (meetingId: string) => {
+    setMeetings((current) => {
+      const updatedMeetings = current.filter((meeting) => meeting.id !== meetingId)
+      saveVirtualMeetings(updatedMeetings)
+      return updatedMeetings
+    })
+    setStatusMessage('Reunion eliminada de la agenda.')
   }
 
   return (
     <div>
       <div className="mb-6 sm:mb-8">
-        <p className="text-xs sm:text-sm text-muted-foreground font-medium uppercase tracking-wider mb-1">
-          Portal del Paciente
-        </p>
-        <h1 className="font-serif text-2xl sm:text-3xl font-bold text-foreground text-balance">Sala Virtual</h1>
+        <p className="text-xs sm:text-sm text-muted-foreground font-medium uppercase tracking-wider mb-1">Portal del Paciente</p>
+        <h1 className="font-serif text-2xl sm:text-3xl font-bold text-foreground text-balance">Agenda de Sala Virtual</h1>
         <p className="text-sm sm:text-base text-muted-foreground mt-1">
-          Teleconsultas médicas de baja complejidad desde cualquier dispositivo.
+          Programa una reunion con un profesional segun su disponibilidad y la cobertura de tu obra social.
         </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-        <div className="space-y-4">
-          <h2 className="font-serif text-lg font-bold text-foreground hidden sm:block">Teleconsultas programadas</h2>
-          {virtualAppointments.length === 0 ? (
-            <Card className="border-border shadow-none">
-              <CardContent className="p-8 text-center text-muted-foreground">
-                No tenés teleconsultas programadas.
-              </CardContent>
-            </Card>
-          ) : (
-            virtualAppointments.map((appt) => (
-              <Card key={appt.id} className="border-border shadow-none">
-                <CardContent className="p-4 sm:p-5">
-                  <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4">
-                    <div className="flex gap-3 min-w-0">
-                      <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-accent/10 flex items-center justify-center flex-shrink-0">
-                        <Video className="w-5 h-5 text-accent" />
-                      </div>
-                      <div className="min-w-0">
-                        <p className="font-semibold text-foreground text-sm truncate">{appt.doctor}</p>
-                        <p className="text-xs text-muted-foreground truncate">{appt.specialty}</p>
-                        <div className="flex items-center gap-2 mt-1.5 text-xs text-muted-foreground">
-                          <Clock className="w-3 h-3 flex-shrink-0" />
-                          <span className="truncate">
-                            {formatDate(appt.date)} · {appt.time} hs
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                    <Button
-                      size="sm"
-                      className="bg-accent text-accent-foreground hover:bg-accent/90 text-xs flex-shrink-0 w-full sm:w-auto"
-                      onClick={() => setState('waiting')}
-                    >
-                      Unirse
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))
-          )}
-
-          <Card className="border-dashed border-2 border-border shadow-none cursor-pointer hover:border-primary transition-colors">
-            <CardContent className="p-5 flex items-center gap-3 text-muted-foreground hover:text-foreground transition-colors">
-              <div className="w-11 h-11 rounded-xl bg-muted flex items-center justify-center">
-                <Plus className="w-5 h-5" />
-              </div>
-              <div>
-                <p className="text-sm font-medium">Solicitar nueva teleconsulta</p>
-                <p className="text-xs opacity-70">Consultas de baja complejidad disponibles</p>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        <div className="space-y-4">
-          <Card className="border-border shadow-none order-first sm:order-none">
-            <CardHeader className="pb-3">
-              <CardTitle className="font-serif text-base font-bold">Unirse con código de sesión</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex gap-2">
-                <div className="flex-1 bg-muted rounded-lg px-4 py-3 flex items-center gap-2 border border-border">
-                  <Link2 className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                  <input
-                    className="flex-1 bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground font-mono"
-                    placeholder="HG-YYYY-XXXX"
-                    defaultValue={sessionCode}
-                    readOnly
-                  />
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 sm:gap-6">
+        <Card className="border-border shadow-none xl:col-span-2">
+          <CardHeader>
+            <CardTitle className="font-serif text-lg font-bold">Nueva reunion virtual</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-foreground">Profesional</label>
+                <div className="relative">
+                  <Stethoscope className="pointer-events-none absolute left-3 top-1/2 z-10 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <select
+                    className="w-full h-9 appearance-none rounded-md border border-input bg-transparent pl-10 pr-10 text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+                    value={selectedProfessionalId}
+                    onChange={(event) => {
+                      setSelectedProfessionalId(event.target.value)
+                      resetDateAndTime()
+                      setStatusMessage('')
+                    }}
+                  >
+                    <option value="">Seleccionar profesional</option>
+                    {professionals.map((professional) => (
+                      <option key={professional.id} value={professional.id}>
+                        {professional.name} - {professional.specialty}
+                      </option>
+                    ))}
+                  </select>
                 </div>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="border-border"
-                  onClick={handleCopy}
-                  aria-label="Copiar código"
-                >
-                  {copied ? <CheckCircle className="w-4 h-4 text-primary" /> : <Copy className="w-4 h-4" />}
-                </Button>
               </div>
-              <Button className="w-full bg-primary text-primary-foreground hover:bg-secondary" onClick={() => setState('waiting')}>
-                <Phone className="w-4 h-4 mr-2" />
-                Conectarse a la sesión
-              </Button>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-foreground">Fecha</label>
+                <div className="relative">
+                  <CalendarDays className="pointer-events-none absolute left-3 top-1/2 z-10 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <select
+                    className="w-full h-9 appearance-none rounded-md border border-input bg-transparent pl-10 pr-10 text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:opacity-50"
+                    value={selectedDate}
+                    disabled={!selectedProfessional}
+                    onChange={(event) => {
+                      setSelectedDate(event.target.value)
+                      setSelectedTime('')
+                      setStatusMessage('')
+                    }}
+                  >
+                    <option value="">Seleccionar fecha</option>
+                    {availableDates.map((date) => (
+                      <option key={date} value={date}>
+                        {formatDate(date)}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-foreground">Horario</label>
+                <div className="relative">
+                  <Clock3 className="pointer-events-none absolute left-3 top-1/2 z-10 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <select
+                    className="w-full h-9 appearance-none rounded-md border border-input bg-transparent pl-10 pr-10 text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:opacity-50"
+                    value={selectedTime}
+                    disabled={!selectedDate}
+                    onChange={(event) => {
+                      setSelectedTime(event.target.value)
+                      setStatusMessage('')
+                    }}
+                  >
+                    <option value="">Seleccionar horario</option>
+                    {availableTimes.map((time) => (
+                      <option key={time} value={time}>
+                        {time} hs
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-foreground">Obra social del cliente</label>
+                <Input value={currentPatient.obraSocial} readOnly className="bg-muted" />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-foreground">Motivo de la consulta (opcional)</label>
+              <Textarea
+                placeholder="Ej: control de sintomas, renovacion de receta, seguimiento de estudio..."
+                value={reason}
+                onChange={(event) => setReason(event.target.value)}
+              />
+            </div>
+
+            <div
+              className={cn(
+                'rounded-lg border p-3 flex items-start gap-3',
+                insuranceMatch ? 'border-primary/30 bg-primary/5' : 'border-destructive/30 bg-destructive/5'
+              )}
+            >
+              {insuranceMatch ? (
+                <ShieldCheck className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
+              ) : (
+                <ShieldAlert className="w-5 h-5 text-destructive mt-0.5 flex-shrink-0" />
+              )}
+              <div>
+                <p className="text-sm font-medium text-foreground">Validacion de cobertura</p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  {selectedProfessional
+                    ? insuranceMatch
+                      ? 'La obra social es compatible con el profesional seleccionado.'
+                      : 'La obra social no coincide con la cartilla de este profesional.'
+                    : 'Selecciona un profesional para validar si tu obra social es compatible.'}
+                </p>
+              </div>
+            </div>
+
+            {statusMessage && (
+              <p
+                className={cn(
+                  'text-sm rounded-md px-3 py-2',
+                  statusMessage.includes('exito')
+                    ? 'bg-primary/10 text-primary border border-primary/30'
+                    : 'bg-destructive/10 text-destructive border border-destructive/30'
+                )}
+              >
+                {statusMessage}
+              </p>
+            )}
+
+            <Button className="w-full sm:w-auto" onClick={handleSchedule} disabled={!canSchedule}>
+              <UserRoundPlus className="w-4 h-4 mr-2" />
+              Agendar reunion
+            </Button>
+          </CardContent>
+        </Card>
+
+        <div className="space-y-4">
+          <Card className="border-border shadow-none">
+            <CardHeader className="pb-3">
+              <CardTitle className="font-serif text-base font-bold">Criterios de agendado</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2 text-sm text-muted-foreground">
+              <p>1. El profesional debe tener disponibilidad en la fecha y hora elegidas.</p>
+              <p>2. La obra social del cliente debe estar dentro de las coberturas aceptadas por el profesional.</p>
+
             </CardContent>
           </Card>
 
           <Card className="border-border shadow-none">
             <CardHeader className="pb-3">
-              <CardTitle className="font-serif text-base font-bold">Requisitos técnicos</CardTitle>
+              <CardTitle className="font-serif text-base font-bold">Reuniones programadas</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              {[
-                { label: 'Cámara detectada', ok: true },
-                { label: 'Micrófono habilitado', ok: true },
-                { label: 'Conexión estable (15 Mbps+)', ok: true },
-                { label: 'Navegador compatible (Chrome/Firefox)', ok: true },
-              ].map(({ label, ok }) => (
-                <div key={label} className="flex items-center gap-3">
-                  <CheckCircle className={cn('w-4 h-4 flex-shrink-0', ok ? 'text-primary' : 'text-muted-foreground')} />
-                  <span className="text-sm text-foreground">{label}</span>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-
-          <Card className="border-border shadow-none bg-primary/5">
-            <CardContent className="p-4 flex gap-3">
-              <Users className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
-              <div>
-                <p className="text-sm font-semibold text-foreground">Teleconsultas disponibles</p>
-                <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
-                  Las consultas virtuales son para seguimientos, recetas y consultas de baja complejidad. Para urgencias,
-                  concurrí al servicio de guardia.
-                </p>
-              </div>
+              {meetings.length === 0 ? (
+                <p className="text-sm text-muted-foreground">No hay reuniones agendadas todavia.</p>
+              ) : (
+                meetings.map((meeting) => (
+                  <div key={meeting.id} className="rounded-lg border border-border p-3 space-y-1.5">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="font-medium text-sm text-foreground truncate">{meeting.professional}</p>
+                      <Badge variant="outline" className="text-xs">
+                        {meeting.status}
+                      </Badge>
+                    </div>
+                    <p className="text-xs text-muted-foreground">{meeting.specialty}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {formatDate(meeting.date)} - {meeting.time} hs
+                    </p>
+                    <div className="pt-1">
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="destructive"
+                        onClick={() => handleDeleteMeeting(meeting.id)}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                        Cancelar reunion
+                      </Button>
+                    </div>
+                  </div>
+                ))
+              )}
             </CardContent>
           </Card>
         </div>
@@ -367,4 +373,3 @@ export function SalaVirtualPage() {
     </div>
   )
 }
-
