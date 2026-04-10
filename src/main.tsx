@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 
 import { ThemeProvider } from '@/components/theme-provider'
+import { AuthProvider } from '@/src/context/AuthContext'
 
 import './globals.css'
 import { App } from './App'
@@ -16,7 +17,9 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
       storageKey="healthgrid-theme"
     >
       <BrowserRouter>
-        <App />
+        <AuthProvider>
+          <App />
+        </AuthProvider>
       </BrowserRouter>
     </ThemeProvider>
   </React.StrictMode>

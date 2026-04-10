@@ -19,6 +19,7 @@ import { currentPatient, notifications } from '@/lib/mock-data'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { useAuth } from '@/src/context/AuthContext'
 
 type Tab = 'perfil' | 'notificaciones' | 'seguridad'
 
@@ -181,16 +182,33 @@ function NotificationsTab() {
 }
 
 function ProfileTab() {
+  const { user, updateUser } = useAuth()
   const [editing, setEditing] = useState(false)
+
+  // Nombre consolidado del auth o del mock
+  const authenticatedName = user ? `${user.nombre} ${user.apellido}`.trim() : currentPatient.name
+  const authenticatedEmail = user?.email ?? currentPatient.email
+  const authenticatedDni = user?.dni ?? currentPatient.dni
+  const authenticatedObraSocial = user?.obraSocial ?? currentPatient.obraSocial ?? 'Ninguna'
+
   const [form, setForm] = useState({
-    name: currentPatient.name,
+    name: authenticatedName,
     phone: currentPatient.phone,
-    email: currentPatient.email,
+    email: authenticatedEmail,
   })
+
+  // Sincronizar form si el usuario cambia (ej. al cargar)
+  useEffect(() => {
+    setForm({
+      name: authenticatedName,
+      phone: currentPatient.phone,
+      email: authenticatedEmail,
+    })
+  }, [authenticatedName, authenticatedEmail])
 
   const fields = [
     { label: 'Nombre completo', key: 'name' as const, editable: false },
-    { label: 'DNI', value: currentPatient.dni, editable: false },
+    { label: 'DNI', value: authenticatedDni, editable: false },
     {
       label: 'Fecha de nacimiento',
       value: new Date(currentPatient.dateOfBirth + 'T00:00:00').toLocaleDateString('es-AR'),
@@ -199,24 +217,31 @@ function ProfileTab() {
     { label: 'Grupo sanguíneo', value: currentPatient.bloodType, editable: false },
     { label: 'Teléfono', key: 'phone' as const, editable: true },
     { label: 'Email', key: 'email' as const, editable: true },
-    { label: 'Obra Social', value: currentPatient.obraSocial, editable: false },
+    { label: 'Obra Social', value: authenticatedObraSocial, editable: false },
     { label: 'N° de afiliado', value: currentPatient.affiliateNumber, editable: false },
   ]
+
+  const handleSave = () => {
+    updateUser({
+      email: form.email.trim(),
+    })
+    setEditing(false)
+  }
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
         <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-primary flex items-center justify-center text-primary-foreground text-lg sm:text-2xl font-bold flex-shrink-0">
-          {currentPatient.name
+          {authenticatedName
             .split(' ')
             .map((n) => n[0])
             .slice(0, 2)
             .join('')}
         </div>
         <div className="flex-1 min-w-0">
-          <h2 className="font-serif text-lg sm:text-xl font-bold text-foreground truncate">{currentPatient.name}</h2>
-          <p className="text-xs sm:text-sm text-muted-foreground truncate">{currentPatient.obraSocial}</p>
-          <p className="text-xs text-muted-foreground">ID: {currentPatient.id}</p>
+          <h2 className="font-serif text-lg sm:text-xl font-bold text-foreground truncate">{authenticatedName}</h2>
+          <p className="text-xs sm:text-sm text-muted-foreground truncate">{authenticatedObraSocial}</p>
+          <p className="text-xs text-muted-foreground">ID: {user?.dni ? `PAT-${user.dni.slice(-5)}` : currentPatient.id}</p>
         </div>
         <Button
           variant="outline"
@@ -266,7 +291,7 @@ function ProfileTab() {
       </Card>
 
       {editing && (
-        <Button className="w-full bg-primary text-primary-foreground hover:bg-secondary" onClick={() => setEditing(false)}>
+        <Button className="w-full bg-primary text-primary-foreground hover:bg-secondary" onClick={handleSave}>
           <Save className="w-4 h-4 mr-2" />
           Guardar cambios
         </Button>

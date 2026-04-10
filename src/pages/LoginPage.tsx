@@ -1,11 +1,13 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link, Navigate } from 'react-router-dom'
 import { Activity, Eye, EyeOff, Lock, User } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
+import { useAuth } from '@/src/context/AuthContext'
 
 export function LoginPage() {
   const navigate = useNavigate()
+  const { user, login, loginDemo } = useAuth()
   const [dni, setDni] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -14,17 +16,23 @@ export function LoginPage() {
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault()
-    if (!dni.trim() || !password.trim()) {
-      setError('Ingresá tu DNI y contraseña para continuar.')
-      return
-    }
     setError('')
     setLoading(true)
-    setTimeout(() => {
-      setLoading(false)
-      navigate('/mi-salud')
-    }, 1200)
+    const result = login(dni, password)
+    setLoading(false)
+    if (!result.ok) {
+      setError(result.message)
+      return
+    }
+    navigate('/mi-salud')
   }
+
+  const handleDemo = () => {
+    loginDemo()
+    navigate('/mi-salud')
+  }
+
+  if (user) return <Navigate to="/mi-salud" replace />
 
   return (
     <div className="min-h-screen bg-background flex">
@@ -154,8 +162,8 @@ export function LoginPage() {
 
             <div className="mt-6 pt-6 border-t border-border">
               <p className="text-xs text-muted-foreground text-center">
-                ¿Primera vez? Registrate con tu número de afiliado en la recepción o
-                <button className="text-accent hover:underline ml-1">solicitá acceso online</button>.
+                ¿Primera vez?{' '}
+                <Link to="/register" className="text-accent hover:underline">Creá tu cuenta acá</Link>.
               </p>
             </div>
           </CardContent>
@@ -167,7 +175,7 @@ export function LoginPage() {
             variant="outline"
             size="sm"
             className="border-border text-muted-foreground hover:text-foreground text-xs"
-            onClick={() => navigate('/mi-salud')}
+            onClick={handleDemo}
           >
             Entrar como paciente de prueba
           </Button>

@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { NavLink, useLocation } from "react-router-dom"
+import { NavLink, useLocation, useNavigate } from "react-router-dom"
 import {
   Heart,
   Video,
@@ -15,6 +15,7 @@ import {
 import { cn } from "@/lib/utils"
 import { currentPatient, notifications } from "@/lib/mock-data"
 import { Badge } from "@/components/ui/badge"
+import { useAuth } from "@/src/context/AuthContext"
 
 const navItems = [
   {
@@ -46,7 +47,26 @@ const navItems = [
 export function Sidebar() {
   const [mobileOpen, setMobileOpen] = useState(false)
   const { pathname } = useLocation()
+  const navigate = useNavigate()
+  const { user, logout } = useAuth()
   const unreadCount = notifications.filter((n) => !n.read).length
+
+  const displayName =
+    user && (user.nombre || user.apellido)
+      ? [user.nombre, user.apellido].filter(Boolean).join(" ")
+      : currentPatient.name
+  const displaySubtitle = user?.obraSocial ?? "Cuenta paciente"
+  const initials = displayName
+    .split(" ")
+    .map((n) => n[0])
+    .slice(0, 2)
+    .join("")
+
+  const handleLogout = () => {
+    logout()
+    navigate("/", { replace: true })
+    setMobileOpen(false)
+  }
 
   const SidebarContent = () => (
     <div className="flex flex-col h-full">
@@ -69,13 +89,11 @@ export function Sidebar() {
       <div className="px-4 py-4 border-b border-sidebar-border">
         <div className="flex items-center gap-3 px-2 py-2.5 rounded-lg bg-sidebar-accent">
           <div className="w-9 h-9 rounded-full bg-primary flex items-center justify-center text-primary-foreground text-sm font-bold flex-shrink-0">
-            {currentPatient.name.split(" ").map((n) => n[0]).slice(0, 2).join("")}
+            {initials}
           </div>
           <div className="min-w-0">
-            <p className="text-sm font-semibold text-sidebar-foreground truncate">
-              {currentPatient.name.split(" ").slice(0, 2).join(" ")}
-            </p>
-            <p className="text-xs text-sidebar-foreground/60">{currentPatient.obraSocial}</p>
+            <p className="text-sm font-semibold text-sidebar-foreground truncate">{displayName}</p>
+            <p className="text-xs text-sidebar-foreground/60 truncate">{displaySubtitle}</p>
           </div>
         </div>
       </div>
@@ -149,7 +167,11 @@ export function Sidebar() {
 
       {/* Footer */}
       <div className="px-3 py-4 border-t border-sidebar-border">
-        <button className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sidebar-foreground/60 hover:bg-sidebar-accent hover:text-sidebar-foreground transition-colors w-full">
+        <button
+          type="button"
+          onClick={handleLogout}
+          className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sidebar-foreground/60 hover:bg-sidebar-accent hover:text-sidebar-foreground transition-colors w-full"
+        >
           <LogOut className="w-4 h-4" />
           <span className="text-sm">Cerrar sesión</span>
         </button>
