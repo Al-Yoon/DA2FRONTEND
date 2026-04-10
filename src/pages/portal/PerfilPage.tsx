@@ -166,7 +166,7 @@ function NotificationsTab() {
                 >
                   <span
                     className={cn(
-                      'absolute top-1 w-4 h-4 rounded-full bg-card shadow transition-transform',
+                      'absolute top-1 left-0 w-4 h-4 rounded-full bg-card shadow transition-transform',
                       on ? 'translate-x-5' : 'translate-x-1'
                     )}
                   />
