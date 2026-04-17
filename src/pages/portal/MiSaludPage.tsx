@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import {
   Calendar,
   FileText,
@@ -15,6 +15,7 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { upcomingAppointments, prescriptionHistory, labResults } from '@/lib/mock-data'
+import { getInitialVirtualMeetings, toUpcomingAppointment } from '@/lib/virtual-meetings'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -26,7 +27,9 @@ function formatDate(dateStr: string) {
   return date.toLocaleDateString('es-AR', { day: 'numeric', month: 'long', year: 'numeric' })
 }
 
-function AppointmentsTab() {
+type UpcomingAppointment = (typeof upcomingAppointments)[number]
+
+function AppointmentsTab({ appointments }: { appointments: UpcomingAppointment[] }) {
   return (
     <div className="space-y-4">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
@@ -35,7 +38,7 @@ function AppointmentsTab() {
           + Solicitar turno
         </Button>
       </div>
-      {upcomingAppointments.map((appt) => (
+      {appointments.map((appt) => (
         <Card key={appt.id} className="border-border shadow-none">
           <CardContent className="p-4 sm:p-5">
             <div className="flex flex-col gap-3">
@@ -76,14 +79,6 @@ function AppointmentsTab() {
                 >
                   {appt.status}
                 </Badge>
-                {appt.modality === 'virtual' && (
-                  <Button
-                    size="sm"
-                    className="bg-accent text-accent-foreground hover:bg-accent/90 text-xs w-full sm:w-auto"
-                  >
-                    Unirse
-                  </Button>
-                )}
               </div>
             </div>
           </CardContent>
@@ -292,6 +287,17 @@ const tabs: { id: Tab; label: string; icon: React.ElementType }[] = [
 export function MiSaludPage() {
   const [activeTab, setActiveTab] = useState<Tab>('turnos')
 
+  const upcomingAppointmentsWithVirtualMeetings = useMemo(() => {
+    const nonVirtualAppointments = upcomingAppointments.filter((appointment) => appointment.modality !== 'virtual')
+    const virtualMeetingsAsAppointments = getInitialVirtualMeetings().map(toUpcomingAppointment)
+
+    return [...nonVirtualAppointments, ...virtualMeetingsAsAppointments].sort((a, b) => {
+      const dateA = new Date(`${a.date}T${a.time}:00`).getTime()
+      const dateB = new Date(`${b.date}T${b.time}:00`).getTime()
+      return dateA - dateB
+    })
+  }, [])
+
   return (
     <div>
       <div className="mb-6 sm:mb-8">
@@ -306,7 +312,12 @@ export function MiSaludPage() {
 
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-4 mb-6 sm:mb-8">
         {[
-          { label: 'Turnos próximos', value: upcomingAppointments.length, icon: Calendar, color: 'text-primary' },
+          {
+            label: 'Turnos próximos',
+            value: upcomingAppointmentsWithVirtualMeetings.length,
+            icon: Calendar,
+            color: 'text-primary',
+          },
           {
             label: 'Recetas vigentes',
             value: prescriptionHistory.filter((r) => r.status === 'vigente').length,
@@ -343,7 +354,7 @@ export function MiSaludPage() {
         ))}
       </div>
 
-      {activeTab === 'turnos' && <AppointmentsTab />}
+      {activeTab === 'turnos' && <AppointmentsTab appointments={upcomingAppointmentsWithVirtualMeetings} />}
       {activeTab === 'recetas' && <PrescriptionsTab />}
       {activeTab === 'laboratorio' && <LabTab />}
     </div>
