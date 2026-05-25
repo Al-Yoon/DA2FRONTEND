@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import {
   Calendar,
   FileText,
@@ -14,8 +14,9 @@ import {
   RefreshCw,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { upcomingAppointments, prescriptionHistory, labResults } from '@/lib/mock-data'
+import { upcomingAppointments, labResults } from '@/lib/mock-data'
 import { getInitialVirtualMeetings, toUpcomingAppointment } from '@/lib/virtual-meetings'
+import { useRecipes } from '@/src/context/RecipesContext'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -90,16 +91,34 @@ function AppointmentsTab({ appointments }: { appointments: UpcomingAppointment[]
 
 function PrescriptionsTab() {
   const [expandedId, setExpandedId] = useState<string | null>(null)
+  const { recipes, loading, error, refreshRecipes } = useRecipes()
+
+  useEffect(() => {
+    refreshRecipes()
+  }, [refreshRecipes])
+
+  if (loading) {
+    return <div className="text-center text-muted-foreground">Cargando recetas...</div>
+  }
+
+  if (error) {
+    return <div className="text-center text-red-500">Error: {error}</div>
+  }
+
+  if (recipes.length === 0) {
+    return <div className="text-center text-muted-foreground">No hay recetas disponibles</div>
+  }
+
   return (
     <div className="space-y-4">
       <h2 className="font-serif text-xl font-bold text-foreground">Historial de Recetas</h2>
-      {prescriptionHistory.map((rec) => {
-        const isOpen = expandedId === rec.id
+      {recipes.map((rec) => {
+        const isOpen = expandedId === rec._id
         return (
-          <Card key={rec.id} className="border-border shadow-none overflow-hidden">
+          <Card key={rec._id} className="border-border shadow-none overflow-hidden">
             <button
               className="w-full text-left"
-              onClick={() => setExpandedId(isOpen ? null : rec.id)}
+              onClick={() => setExpandedId(isOpen ? null : rec._id)}
               aria-expanded={isOpen}
             >
               <CardContent className="p-5">
@@ -109,11 +128,10 @@ function PrescriptionsTab() {
                       <FileText className="w-6 h-6 text-accent" />
                     </div>
                     <div>
-                      <p className="font-semibold text-foreground">Receta {rec.id}</p>
-                      <p className="text-sm text-muted-foreground">{rec.doctor}</p>
+                      <p className="font-semibold text-foreground">Receta {rec._id.slice(-6)}</p>
+                      <p className="text-sm text-muted-foreground">{rec.medicoId}</p>
                       <p className="text-xs text-muted-foreground mt-1">
-                        Emitida el {formatDate(rec.date)} · {rec.medications.length} medicamento
-                        {rec.medications.length !== 1 ? 's' : ''}
+                        Emitida el {formatDate(rec.fechaEmision)}
                       </p>
                     </div>
                   </div>
@@ -122,12 +140,12 @@ function PrescriptionsTab() {
                       variant="outline"
                       className={cn(
                         'text-xs',
-                        rec.status === 'vigente'
+                        rec.estado === 'VIGENTE'
                           ? 'bg-primary/10 text-primary border-primary/20'
                           : 'bg-muted text-muted-foreground'
                       )}
                     >
-                      {rec.status}
+                      {rec.estado}
                     </Badge>
                     {isOpen ? (
                       <ChevronUp className="w-4 h-4 text-muted-foreground" />
@@ -141,13 +159,11 @@ function PrescriptionsTab() {
             {isOpen && (
               <div className="px-5 pb-5 border-t border-border">
                 <div className="pt-4 space-y-3">
-                  {rec.medications.map((med, i) => (
-                    <div key={i} className="bg-muted rounded-lg p-3">
-                      <p className="text-sm font-semibold text-foreground">{med.name}</p>
-                      <p className="text-xs text-muted-foreground mt-0.5">{med.instructions}</p>
-                      <p className="text-xs text-primary mt-1 font-medium">{med.quantity}</p>
-                    </div>
-                  ))}
+                  <div className="bg-muted rounded-lg p-3">
+                    <p className="text-sm font-semibold text-foreground">{rec.medicamento}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">Dosis: {rec.dosis}</p>
+                    <p className="text-xs text-muted-foreground mt-1">Indicaciones: {rec.indicaciones}</p>
+                  </div>
                   <Button
                     variant="outline"
                     size="sm"
@@ -286,6 +302,11 @@ const tabs: { id: Tab; label: string; icon: React.ElementType }[] = [
 
 export function MiSaludPage() {
   const [activeTab, setActiveTab] = useState<Tab>('turnos')
+  const { recipes, refreshRecipes } = useRecipes()
+
+  useEffect(() => {
+    refreshRecipes()
+  }, [refreshRecipes])
 
   const upcomingAppointmentsWithVirtualMeetings = useMemo(() => {
     const nonVirtualAppointments = upcomingAppointments.filter((appointment) => appointment.modality !== 'virtual')
@@ -297,6 +318,10 @@ export function MiSaludPage() {
       return dateA - dateB
     })
   }, [])
+
+  const activeRecipesCount = useMemo(() => {
+    return recipes.filter((r) => r.estado === 'VIGENTE').length
+  }, [recipes])
 
   return (
     <div>
@@ -320,7 +345,7 @@ export function MiSaludPage() {
           },
           {
             label: 'Recetas vigentes',
-            value: prescriptionHistory.filter((r) => r.status === 'vigente').length,
+            value: activeRecipesCount,
             icon: FileText,
             color: 'text-accent',
           },
