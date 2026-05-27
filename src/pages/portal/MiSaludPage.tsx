@@ -35,9 +35,6 @@ function AppointmentsTab({ appointments }: { appointments: UpcomingAppointment[]
     <div className="space-y-4">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <h2 className="font-serif text-lg sm:text-xl font-bold text-foreground">Turnos Próximos</h2>
-        <Button size="sm" className="bg-primary text-primary-foreground hover:bg-secondary w-full sm:w-auto">
-          + Solicitar turno
-        </Button>
       </div>
       {appointments.map((appt) => (
         <Card key={appt.id} className="border-border shadow-none">
