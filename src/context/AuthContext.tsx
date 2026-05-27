@@ -84,29 +84,68 @@ function writeRegistered(accounts: StoredAccount[]): void {
   sessionStorage.setItem(REGISTERED_KEY, JSON.stringify(accounts))
 }
 
+/**
+ * Detecta el modo del back (mock|real) consultando GET /api/config. Se cachea
+ * en memoria para no pegarle en cada login. Así el front "respeta el entorno":
+ *   - dev   (mock) -> autentica con /api/auth/mock-login
+ *   - prod  (real) -> autentica contra el Core via /api/auth/login (email+password)
+ */
+let backendModePromise: Promise<'mock' | 'real'> | null = null
+function getBackendMode(): Promise<'mock' | 'real'> {
+  if (!backendModePromise) {
+    backendModePromise = fetch(apiUrl('/api/config'))
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => (d?.integrationMode === 'real' ? 'real' : 'mock'))
+      .catch(() => 'mock')
+  }
+  return backendModePromise
+}
+
+/** Normaliza la respuesta del back (mismo shape en mock-login y login real). */
+function mapBackendUser(data: any): Partial<AuthUser> {
+  return {
+    id: data?.user?._id ?? data?.user?.id,
+    token: data?.token,
+    obraSocial: data?.user?.obraSocial,
+    telefono: data?.user?.telefono,
+    nroAfiliado: data?.user?.nroAfiliado,
+  }
+}
+
 async function fetchBackendSession(input: {
   dni: string
   email: string
   nombre: string
   apellido: string
+  password?: string
 }): Promise<Partial<AuthUser>> {
   try {
+    const mode = await getBackendMode()
+
+    // Modo REAL: autenticamos contra el Core (M10) con email + password.
+    if (mode === 'real' && input.password) {
+      const real = await fetch(apiUrl('/api/auth/login'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: input.email, password: input.password }),
+      })
+      if (real.ok) return mapBackendUser(await real.json())
+      return {} // el Core rechazó: no rompemos el flujo de demo del front
+    }
+
+    // Modo MOCK (o sin password, ej. login demo): mock-login del back.
     const response = await fetch(apiUrl('/api/auth/mock-login'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(input),
+      body: JSON.stringify({
+        dni: input.dni,
+        email: input.email,
+        nombre: input.nombre,
+        apellido: input.apellido,
+      }),
     })
-
     if (!response.ok) return {}
-
-    const data = await response.json()
-    return {
-      id: data.user?._id ?? data.user?.id,
-      token: data.token,
-      obraSocial: data.user?.obraSocial,
-      telefono: data.user?.telefono,
-      nroAfiliado: data.user?.nroAfiliado,
-    }
+    return mapBackendUser(await response.json())
   } catch {
     return {}
   }
@@ -179,6 +218,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       email: found.email,
       nombre: found.nombre,
       apellido: found.apellido,
+      password,
     })
     const next: AuthUser = {
       dni: key,
@@ -223,6 +263,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         email: input.email.trim(),
         nombre: input.nombre.trim(),
         apellido: input.apellido.trim(),
+        password: input.password,
       })
       const next: AuthUser = {
         dni: key,
