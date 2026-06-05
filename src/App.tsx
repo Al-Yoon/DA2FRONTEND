@@ -6,6 +6,7 @@ import { MiSaludPage } from './pages/portal/MiSaludPage'
 import { SalaVirtualPage } from './pages/portal/SalaVirtualPage'
 import { PagosPage } from './pages/portal/PagosPage'
 import { PerfilPage } from './pages/portal/PerfilPage'
+import { NotificacionesPage } from './pages/portal/NotificacionesPage'
 
 export function App() {
   return (
@@ -13,6 +14,7 @@ export function App() {
       <Route path="/" element={<LoginPage />} />
 
       <Route element={<PortalLayout />}>
+        <Route path="/notificaciones" element={<NotificacionesPage />} />
         <Route path="/mi-salud" element={<MiSaludPage />} />
         <Route path="/sala-virtual" element={<SalaVirtualPage />} />
         <Route path="/pagos" element={<PagosPage />} />
