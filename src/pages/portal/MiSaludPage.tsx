@@ -450,10 +450,7 @@ export function MiSaludPage() {
   }, [user])
 
   const upcomingAppointmentsWithVirtualMeetings = useMemo(() => {
-    const nonVirtualAppointments = appointments.filter((appointment) => appointment.modality !== 'virtual')
-    const virtualMeetingsAsAppointments = getInitialVirtualMeetings().map(toUpcomingAppointment)
-
-    return [...nonVirtualAppointments, ...virtualMeetingsAsAppointments].sort((a, b) => {
+    return [...appointments].sort((a, b) => {
       const dateA = new Date(`${a.date}T${a.time}:00`).getTime()
       const dateB = new Date(`${b.date}T${b.time}:00`).getTime()
       return dateA - dateB

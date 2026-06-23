@@ -36,7 +36,7 @@ export async function fetchAppointments(token: string): Promise<UpcomingAppointm
       date: t.starts_at ? t.starts_at.split(' ')[0] : '',
       time: t.starts_at && t.starts_at.split(' ').length > 1 ? t.starts_at.split(' ')[1].substring(0, 5) : '00:00', // HH:mm
       location: t.medical_center?.name || 'Centro Médico',
-      modality: t.modality === 'virtual' ? 'virtual' : 'presencial',
+      modality: (t.modality === 'virtual' || t.medical_center?.name === 'Sala Virtual' || !!t.linkVideollamada) ? 'virtual' : 'presencial',
       status: status,
     }
   })
