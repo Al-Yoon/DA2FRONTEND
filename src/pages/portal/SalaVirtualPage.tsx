@@ -18,7 +18,6 @@ import { useAuth } from '@/src/context/AuthContext'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { cn } from '@/lib/utils'
 
 function formatFriendlyDate(dateStr: string) {
   const parts = dateStr.split('-')
@@ -293,6 +292,49 @@ export function SalaVirtualPage() {
               </CardContent>
             </Card>
           )}
+        </div>
+
+        <div className="space-y-6">
+
+
+          <Card className="border-border shadow-none">
+            <CardHeader className="pb-3 border-b border-border/80">
+              <CardTitle className="font-serif text-base font-bold flex items-center gap-2">
+                Preparación recomendada
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-4 space-y-3.5">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-full bg-primary/5 border border-primary/10 flex items-center justify-center shrink-0">
+                  <Camera className="w-4 h-4 text-primary" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xs font-semibold text-foreground">Cámara web activa</p>
+                  <p className="text-2xs sm:text-xs text-muted-foreground">Asegurate de estar en un ambiente iluminado.</p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-full bg-primary/5 border border-primary/10 flex items-center justify-center shrink-0">
+                  <Mic className="w-4 h-4 text-primary" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xs font-semibold text-foreground">Micrófono y audio</p>
+                  <p className="text-2xs sm:text-xs text-muted-foreground">Usar auriculares mejora la claridad y privacidad.</p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-full bg-primary/5 border border-primary/10 flex items-center justify-center shrink-0">
+                  <Wifi className="w-4 h-4 text-primary" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xs font-semibold text-foreground">Conexión estable</p>
+                  <p className="text-2xs sm:text-xs text-muted-foreground">Preferí redes Wi-Fi confiables frente a datos móviles.</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>
