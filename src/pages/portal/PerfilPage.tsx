@@ -122,8 +122,8 @@ function ProfileTab() {
     },
     { label: 'Teléfono', key: 'phone' as const, editable: true },
     { label: 'Email', key: 'email' as const, editable: true },
-    { label: 'Obra Social', key: 'obraSocial' as const, editable: true },
-    { label: 'N° de afiliado', key: 'nroAfiliado' as const, editable: true },
+    { label: 'Obra Social', key: 'obraSocial' as const, editable: false },
+    { label: 'N° de afiliado', key: 'nroAfiliado' as const, editable: false },
   ]
 
   const handleSave = async () => {
@@ -258,37 +258,6 @@ function SecurityTab() {
 
       <Card className="border-border shadow-none">
         <CardHeader className="pb-3">
-          <CardTitle className="font-serif text-base font-bold">Sesiones activas</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          {[
-            { device: 'Chrome · Windows 11', location: 'Buenos Aires, AR', current: true, time: 'Ahora' },
-            { device: 'Safari · iPhone 14', location: 'Buenos Aires, AR', current: false, time: 'Hace 2 días' },
-          ].map(({ device, location, current, time }) => (
-            <div key={device} className="flex items-center justify-between gap-2 py-2">
-              <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-                <div className={cn('w-2 h-2 rounded-full flex-shrink-0', current ? 'bg-primary' : 'bg-muted-foreground')} />
-                <div className="min-w-0">
-                  <p className="text-sm font-medium text-foreground truncate">{device}</p>
-                  <p className="text-xs text-muted-foreground truncate">
-                    {location} · {time}
-                  </p>
-                </div>
-              </div>
-              {current ? (
-                <Badge className="bg-primary/10 text-primary border-primary/20 text-xs flex-shrink-0" variant="outline">
-                  Actual
-                </Badge>
-              ) : (
-                <button className="text-xs text-destructive hover:underline flex-shrink-0">Cerrar</button>
-              )}
-            </div>
-          ))}
-        </CardContent>
-      </Card>
-
-      <Card className="border-border shadow-none">
-        <CardHeader className="pb-3">
           <CardTitle className="font-serif text-base font-bold">Cambiar contraseña</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
@@ -320,14 +289,6 @@ function SecurityTab() {
               estándares HIPAA.
             </p>
           </div>
-          <Button variant="outline" className="border-border text-foreground hover:bg-muted w-full justify-start">
-            <FileText className="w-4 h-4 mr-2 text-muted-foreground" />
-            Descargar mis datos personales
-          </Button>
-          <Button variant="outline" className="border-destructive text-destructive hover:bg-destructive/5 w-full justify-start">
-            <Trash2 className="w-4 h-4 mr-2" />
-            Solicitar eliminación de cuenta
-          </Button>
         </CardContent>
       </Card>
     </div>
