@@ -42,15 +42,15 @@ function AppointmentsTab({ appointments }: { appointments: UpcomingAppointment[]
     <div className="space-y-4">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <h2 className="font-serif text-lg sm:text-xl font-bold text-foreground">Turnos Próximos</h2>
-<Button
-  asChild
-  size="sm"
-  className="bg-primary text-primary-foreground hover:bg-secondary w-full sm:w-auto"
->
-  <a href="https://turnos.solefrancisco.com">
-    + Solicitar turno
-  </a>
-</Button>
+        <Button
+          asChild
+          size="sm"
+          className="bg-primary text-primary-foreground hover:bg-secondary w-full sm:w-auto"
+        >
+          <a href="https://turnos.solefrancisco.com">
+            + Solicitar turno
+          </a>
+        </Button>
       </div>
       {appointments.map((appt) => (
         <Card key={appt.id} className="border-border shadow-none">
@@ -199,14 +199,6 @@ function PrescriptionsTab() {
                       ))}
                     </div>
                   )}
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="mt-2 border-border text-foreground hover:bg-muted"
-                  >
-                    <Download className="w-3.5 h-3.5 mr-2" />
-                    Descargar PDF
-                  </Button>
                 </div>
               </div>
             )}
@@ -354,7 +346,7 @@ function LabTab() {
                             </td>
 
                             <td className="py-2.5 pr-4 text-right text-muted-foreground">
-                              {r.rangosReferencia?.length > 0 
+                              {r.rangosReferencia?.length > 0
                                 ? `${r.rangosReferencia[0].valorMinimo} - ${r.rangosReferencia[0].valorMaximo}`
                                 : '-'}
                             </td>
