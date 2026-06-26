@@ -239,16 +239,6 @@ function LabTab() {
         <h2 className="font-serif text-xl font-bold text-foreground">
           Resultados de Laboratorio
         </h2>
-
-        <Button
-          variant="outline"
-          size="sm"
-          className="border-border text-foreground hover:bg-muted text-xs"
-          onClick={() => window.location.reload()}
-        >
-          <RefreshCw className="w-3.5 h-3.5 mr-2" />
-          Actualizar
-        </Button>
       </div>
 
       {labResults.length === 0 && (
@@ -385,15 +375,6 @@ function LabTab() {
                       </ul>
                     </div>
                   )}
-
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="mt-4 border-border text-foreground hover:bg-muted"
-                  >
-                    <Download className="w-3.5 h-3.5 mr-2" />
-                    Descargar informe
-                  </Button>
                 </div>
               </div>
             )}
