@@ -16,7 +16,6 @@ import {
 import { cn } from '@/lib/utils'
 import { fetchLabResults, type LabResult } from '@/lib/api/labResults'
 import { fetchAppointments, type UpcomingAppointment } from '@/lib/api/appointments'
-import { getInitialVirtualMeetings, toUpcomingAppointment } from '@/lib/virtual-meetings'
 import { useRecipes } from '@/src/context/RecipesContext'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -26,7 +25,12 @@ import { useAuth } from '@/src/context/AuthContext'
 type Tab = 'turnos' | 'recetas' | 'laboratorio'
 
 function formatDate(dateStr: string) {
-  const date = new Date(dateStr)
+  const parts = dateStr.split('-')
+  if (parts.length !== 3) return dateStr
+  const year = parseInt(parts[0], 10)
+  const month = parseInt(parts[1], 10) - 1
+  const day = parseInt(parts[2], 10)
+  const date = new Date(year, month, day)
 
   return date.toLocaleDateString('es-AR', {
     day: 'numeric',
