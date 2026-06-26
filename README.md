@@ -30,8 +30,11 @@ La aplicación está diseñada bajo principios de modularidad, tipado estricto y
 
 ## 🧑‍💻 Guía de Evaluación y Demo (Usuario Demo)
 
-1. En la pantalla de login del portal, hacé clic en el botón **"Ingresar con usuario demo"**.
-2. Este botón iniciará sesión automáticamente con el paciente demo preestablecido (**María Elena González**).
+1. En la pantalla de login del portal, podés ingresar usando las credenciales de prueba:
+   * **Usuario (Email):** `test@email.com`
+   * **Contraseña:** `123456`
+   * *(O podés hacer clic directamente en el botón **"Ingresar con usuario demo"**).*
+2. Este botón/credencial iniciará sesión automáticamente con el paciente demo preestablecido (**María Elena González**).
 3. El frontend enviará los datos del paciente para validar sesión en el backend y generará tu entorno personalizado en tiempo real.
 4. Navegá por las secciones del menú lateral:
    * **Mi Salud (Turnos):** Visualizarás citas médicas sincronizadas.
