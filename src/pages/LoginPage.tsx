@@ -44,12 +44,10 @@ export function LoginPage() {
     navigate('/mi-salud')
   }
 
-  const handleDemo = async () => {
+  const handleDemo = () => {
     setError('')
-    setDemoLoading(true)
-    await loginDemo()
-    setDemoLoading(false)
-    navigate('/mi-salud')
+    setEmail('maria.gonzalez@email.com')
+    setPassword('demo123')
   }
 
   if (user) return <Navigate to="/mi-salud" replace />

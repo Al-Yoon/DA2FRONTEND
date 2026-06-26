@@ -24,6 +24,7 @@ export type AuthUser = {
   obraSocial?: string
   telefono?: string
   nroAfiliado?: string
+  fechaNacimiento?: string
 }
 
 type StoredAccount = {
@@ -32,6 +33,7 @@ type StoredAccount = {
   nombre: string
   apellido: string
   password: string
+  fechaNacimiento?: string
 }
 
 const REGISTERED_KEY = 'healthgrid-registered-users'
@@ -84,14 +86,30 @@ function writeSession(user: AuthUser | null): void {
 }
 
 function readRegistered(): StoredAccount[] {
+  let parsed: StoredAccount[] = []
   try {
     const raw = sessionStorage.getItem(REGISTERED_KEY)
-    if (!raw) return []
-    const parsed = JSON.parse(raw) as StoredAccount[]
-    return Array.isArray(parsed) ? parsed : []
-  } catch {
-    return []
+    if (raw) {
+      const rawParsed = JSON.parse(raw) as StoredAccount[]
+      if (Array.isArray(rawParsed)) parsed = rawParsed
+    }
+  } catch {}
+
+  const demoEmail = normalizeEmail(currentPatient.email)
+  if (!parsed.some((acc) => normalizeEmail(acc.email) === demoEmail)) {
+    const parts = currentPatient.name.trim().split(/\s+/)
+    const apellido = parts.length > 1 ? parts[parts.length - 1]! : ''
+    const nombre = parts.length > 1 ? parts.slice(0, -1).join(' ') : (parts[0] ?? '')
+    parsed.push({
+      dni: normalizeDni(currentPatient.dni) || fallbackDniFromEmail(demoEmail),
+      email: demoEmail,
+      nombre,
+      apellido,
+      password: 'demo123',
+      fechaNacimiento: currentPatient.dateOfBirth
+    })
   }
+  return parsed
 }
 
 function writeRegistered(accounts: StoredAccount[]): void {
@@ -123,6 +141,7 @@ function mapBackendUser(data: any): Partial<AuthUser> {
     obraSocial: data?.user?.obraSocial,
     telefono: data?.user?.telefono,
     nroAfiliado: data?.user?.nroAfiliado,
+    fechaNacimiento: data?.user?.fechaNacimiento,
   }
 }
 
@@ -132,6 +151,7 @@ async function fetchBackendSession(input: {
   nombre: string
   apellido: string
   password?: string
+  fechaNacimiento?: string
   coreId?: string | number
 }): Promise<Partial<AuthUser>> {
   try {
@@ -158,6 +178,7 @@ async function fetchBackendSession(input: {
         email: input.email,
         nombre: input.nombre,
         apellido: input.apellido,
+        fechaNacimiento: input.fechaNacimiento,
         coreId: input.coreId,
       }),
     })
@@ -241,6 +262,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       nombre: found.nombre,
       apellido: found.apellido,
       password,
+      fechaNacimiento: found.fechaNacimiento,
     })
 
     const next: AuthUser = {
