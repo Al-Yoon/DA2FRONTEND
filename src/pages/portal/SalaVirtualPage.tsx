@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { CalendarDays, Clock3, ShieldAlert, ShieldCheck, Stethoscope, Trash2, UserRoundPlus } from 'lucide-react'
 import { currentPatient } from '@/lib/mock-data'
-import { getInitialVirtualMeetings, saveVirtualMeetings, type VirtualMeeting } from '@/lib/virtual-meetings'
+import { getInitialVirtualMeetings, saveVirtualMeetings, generateMeetUrl, type VirtualMeeting } from '@/lib/virtual-meetings'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -152,6 +152,7 @@ export function SalaVirtualPage() {
       date: selectedDate,
       time: selectedTime,
       status: 'confirmada',
+      meetUrl: generateMeetUrl(),
     }
 
     setMeetings((current) => {
@@ -284,9 +285,9 @@ export function SalaVirtualPage() {
               )}
             >
               {insuranceMatch ? (
-                <ShieldCheck className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
+                <ShieldCheck className="w-5 h-5 text-primary mt-0.5 shrink-0" />
               ) : (
-                <ShieldAlert className="w-5 h-5 text-destructive mt-0.5 flex-shrink-0" />
+                <ShieldAlert className="w-5 h-5 text-destructive mt-0.5 shrink-0" />
               )}
               <div>
                 <p className="text-sm font-medium text-foreground">Validacion de cobertura</p>
@@ -353,6 +354,11 @@ export function SalaVirtualPage() {
                       {formatDate(meeting.date)} - {meeting.time} hs
                     </p>
                     <div className="pt-1">
+                      {meeting.meetUrl && (
+                        <Button className="mr-2" size="sm" asChild>
+                          <a href={meeting.meetUrl} target="_blank" rel="noopener noreferrer">Unirse</a>
+                        </Button>
+                      )}
                       <Button
                         type="button"
                         size="sm"

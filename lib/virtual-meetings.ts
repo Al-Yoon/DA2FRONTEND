@@ -7,9 +7,22 @@ export type VirtualMeeting = {
   date: string
   time: string
   status: 'confirmada'
+  meetUrl?: string
 }
 
 const STORAGE_KEY = 'virtualMeetings'
+
+function randomSegment(len: number) {
+  const chars = 'abcdefghijklmnopqrstuvwxyz0123456789'
+  let s = ''
+  for (let i = 0; i < len; i++) s += chars[Math.floor(Math.random() * chars.length)]
+  return s
+}
+
+export function generateMeetUrl() {
+  // simple mock slug like aaa-bbbb-ccc
+  return `https://meet.google.com/${randomSegment(3)}-${randomSegment(4)}-${randomSegment(3)}`
+}
 
 const baseVirtualMeetings: VirtualMeeting[] = upcomingAppointments
   .filter((appointment) => appointment.modality === 'virtual')
@@ -20,6 +33,7 @@ const baseVirtualMeetings: VirtualMeeting[] = upcomingAppointments
     date: appointment.date,
     time: appointment.time,
     status: 'confirmada' as const,
+    meetUrl: generateMeetUrl(),
   }))
 
 export function getInitialVirtualMeetings(): VirtualMeeting[] {
