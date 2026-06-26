@@ -274,3 +274,97 @@ export const pendingPayments = [
     doctor: "Dr. Martín Rodríguez",
   },
 ]
+
+export const mockPayments = [
+  {
+    _id: "PAG-9921",
+    pacienteId: "101",
+    concepto: "Coseguro — Cardiología",
+    monto: 4500,
+    numeroFactura: "FAC-00018821",
+    metodoPago: "TARJETA" as const,
+    estado: "APROBADO" as const,
+    fechaPago: "2026-03-16T10:30:00.000Z",
+    createdAt: "2026-03-16T10:30:00.000Z",
+    turnoId: {
+      _id: "TUR-8821",
+      medicoId: "Dr. Carlos Peralta",
+      especialidad: "Cardiología",
+      fechaHora: "2026-03-24T09:30:00.000Z",
+      sede: "Consultorio 4B",
+      tipo: "Presencial"
+    }
+  },
+  {
+    _id: "PAG-9870",
+    pacienteId: "101",
+    concepto: "Turno — Clínica Médica",
+    monto: 0,
+    numeroFactura: "FAC-00018952",
+    metodoPago: undefined,
+    estado: "CUBIERTO" as const,
+    fechaPago: "2026-03-12T11:00:00.000Z",
+    createdAt: "2026-03-12T11:00:00.000Z",
+    turnoId: {
+      _id: "TUR-8952",
+      medicoId: "Dra. Laura Vásquez",
+      especialidad: "Clínica Médica",
+      fechaHora: "2026-04-02T11:00:00.000Z",
+      sede: "Sala Virtual",
+      tipo: "Virtual"
+    }
+  },
+  {
+    _id: "PAG-9744",
+    pacienteId: "101",
+    concepto: "Coseguro — Laboratorio",
+    monto: 2800,
+    numeroFactura: "FAC-00012241",
+    metodoPago: "BILLETERA_VIRTUAL" as const,
+    estado: "APROBADO" as const,
+    fechaPago: "2026-03-08T09:00:00.000Z",
+    createdAt: "2026-03-08T09:00:00.000Z",
+    turnoId: {
+      _id: "LAB-2241",
+      medicoId: "Dra. Laura Vásquez",
+      especialidad: "Análisis Clínicos",
+      fechaHora: "2026-03-10T08:30:00.000Z",
+      sede: "Laboratorio Central",
+      tipo: "Presencial"
+    }
+  },
+  {
+    _id: "PEN-001",
+    pacienteId: "101",
+    concepto: "Coseguro — Traumatología",
+    monto: 5200,
+    metodoPago: undefined,
+    estado: "PENDIENTE" as const,
+    createdAt: "2026-03-20T14:45:00.000Z",
+    turnoId: {
+      _id: "TUR-9014",
+      medicoId: "Dr. Martín Rodríguez",
+      especialidad: "Traumatología",
+      fechaHora: "2026-04-10T14:45:00.000Z",
+      sede: "Consultorio 7A",
+      tipo: "Presencial"
+    }
+  },
+  {
+    _id: "PEN-002",
+    pacienteId: "101",
+    concepto: "Coseguro — Pediatría",
+    monto: 3500,
+    metodoPago: undefined,
+    estado: "PENDIENTE" as const,
+    createdAt: "2026-03-22T16:00:00.000Z",
+    turnoId: {
+      _id: "TUR-9102",
+      medicoId: "Dra. Ana Morales",
+      especialidad: "Pediatría",
+      fechaHora: "2026-04-15T16:00:00.000Z",
+      sede: "Consultorio 2C",
+      tipo: "Presencial"
+    }
+  }
+]

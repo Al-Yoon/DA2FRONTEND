@@ -200,14 +200,6 @@ function PrescriptionsTab() {
                       ))}
                     </div>
                   )}
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="mt-2 border-border text-foreground hover:bg-muted"
-                  >
-                    <Download className="w-3.5 h-3.5 mr-2" />
-                    Descargar PDF
-                  </Button>
                 </div>
               </div>
             )}
