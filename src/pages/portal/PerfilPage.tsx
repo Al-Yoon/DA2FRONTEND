@@ -29,6 +29,7 @@ type BackendProfile = {
   telefono?: string
   obraSocial?: string
   nroAfiliado?: string
+  fechaNacimiento?: string
 }
 
 function ProfileTab() {
@@ -51,6 +52,7 @@ function ProfileTab() {
   const authenticatedObraSocial = profile?.obraSocial ?? user?.obraSocial ?? currentPatient.obraSocial ?? 'Ninguna'
   const authenticatedPhone = profile?.telefono ?? user?.telefono ?? currentPatient.phone
   const authenticatedAffiliateNumber = profile?.nroAfiliado ?? user?.nroAfiliado ?? currentPatient.affiliateNumber
+  const authenticatedFechaNacimiento = profile?.fechaNacimiento ?? user?.fechaNacimiento ?? currentPatient.dateOfBirth
 
   const [form, setForm] = useState({
     name: authenticatedName,
@@ -58,6 +60,7 @@ function ProfileTab() {
     email: authenticatedEmail,
     obraSocial: authenticatedObraSocial,
     nroAfiliado: authenticatedAffiliateNumber,
+    fechaNacimiento: authenticatedFechaNacimiento,
   })
 
   useEffect(() => {
@@ -89,6 +92,7 @@ function ProfileTab() {
           telefono: data.telefono,
           obraSocial: data.obraSocial,
           nroAfiliado: data.nroAfiliado,
+          fechaNacimiento: data.fechaNacimiento,
         })
       })
       .catch((error) => {
@@ -109,15 +113,16 @@ function ProfileTab() {
       email: authenticatedEmail,
       obraSocial: authenticatedObraSocial,
       nroAfiliado: authenticatedAffiliateNumber,
+      fechaNacimiento: authenticatedFechaNacimiento,
     })
-  }, [authenticatedName, authenticatedEmail, authenticatedPhone, authenticatedObraSocial, authenticatedAffiliateNumber])
+  }, [authenticatedName, authenticatedEmail, authenticatedPhone, authenticatedObraSocial, authenticatedAffiliateNumber, authenticatedFechaNacimiento])
 
   const fields = [
     { label: 'Nombre completo', key: 'name' as const, editable: false },
     { label: 'DNI', value: authenticatedDni, editable: false },
     {
       label: 'Fecha de nacimiento',
-      value: new Date(currentPatient.dateOfBirth + 'T00:00:00').toLocaleDateString('es-AR'),
+      value: new Date(authenticatedFechaNacimiento + 'T00:00:00').toLocaleDateString('es-AR'),
       editable: false,
     },
     { label: 'Teléfono', key: 'phone' as const, editable: true },
@@ -163,6 +168,7 @@ function ProfileTab() {
         telefono: updatedProfile.telefono,
         obraSocial: updatedProfile.obraSocial,
         nroAfiliado: updatedProfile.nroAfiliado,
+        fechaNacimiento: updatedProfile.fechaNacimiento,
       })
       setEditing(false)
     } catch (error) {
