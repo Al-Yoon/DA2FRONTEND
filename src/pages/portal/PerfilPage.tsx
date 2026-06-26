@@ -122,7 +122,7 @@ function ProfileTab() {
     },
     { label: 'Teléfono', key: 'phone' as const, editable: true },
     { label: 'Email', key: 'email' as const, editable: true },
-    { label: 'Obra Social', key: 'obraSocial' as const, editable: true },
+    { label: 'Obra Social', key: 'obraSocial' as const, editable: false },
     { label: 'N° de afiliado', key: 'nroAfiliado' as const, editable: true },
   ]
 

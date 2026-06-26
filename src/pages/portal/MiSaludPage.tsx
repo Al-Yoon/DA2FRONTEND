@@ -22,6 +22,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { useAuth } from '@/src/context/AuthContext'
+import { upcomingAppointments, labResults as mockLabResults } from '@/lib/mock-data'
 
 type Tab = 'turnos' | 'recetas' | 'laboratorio'
 
@@ -224,12 +225,12 @@ function LabTab() {
   const { user } = useAuth()
 
   useEffect(() => {
-    if (!user?.token) return
+    //if (!user?.token) return
 
     async function loadLabResults() {
       try {
-        const data = await fetchLabResults(user!.token!)
-
+        //const data = await fetchLabResults(user!.token!)
+        const data = mockLabResults
         setLabResults(data)
 
         console.log('Lab results:', data)
@@ -247,16 +248,6 @@ function LabTab() {
         <h2 className="font-serif text-xl font-bold text-foreground">
           Resultados de Laboratorio
         </h2>
-
-        <Button
-          variant="outline"
-          size="sm"
-          className="border-border text-foreground hover:bg-muted text-xs"
-          onClick={() => window.location.reload()}
-        >
-          <RefreshCw className="w-3.5 h-3.5 mr-2" />
-          Actualizar
-        </Button>
       </div>
 
       {labResults.length === 0 && (
@@ -433,11 +424,12 @@ export function MiSaludPage() {
 
   useEffect(() => {
     async function loadAppointments() {
-      if (!user?.token) return
+      //if (!user?.token) return
       try {
         setLoadingAppointments(true)
         setAppointmentsError(null)
-        const data = await fetchAppointments(user.token)
+        //const data = await fetchAppointments(user.token)
+        const data = upcomingAppointments
         setAppointments(data)
       } catch (err: any) {
         console.error('Error fetching appointments:', err)

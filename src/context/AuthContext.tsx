@@ -226,7 +226,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return { ok: false as const, message: 'Ingresá tu email y contraseña para continuar.' }
     }
 
+    const account: StoredAccount = {
+      dni: normalizeDni(currentPatient.dni) || fallbackDniFromEmail(cleanEmail),
+      email: normalizeEmail(currentPatient.email),
+      nombre: currentPatient.name,
+      apellido: currentPatient.surname,
+      password: currentPatient.password,
+    }
     const accounts = readRegistered()
+    accounts.push(account)
     const found = accounts.find((account) => normalizeEmail(account.email) === cleanEmail)
 
     if (!found || found.password !== password) {
@@ -235,13 +243,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const dni = normalizeDni(found.dni) || fallbackDniFromEmail(cleanEmail)
 
-    const backendSession = await fetchBackendSession({
+    /* const backendSession = await fetchBackendSession({
       dni,
       email: found.email,
       nombre: found.nombre,
       apellido: found.apellido,
       password,
-    })
+    }) */
 
     const next: AuthUser = {
       dni,
@@ -249,9 +257,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       nombre: found.nombre,
       apellido: found.apellido,
       isDemo: false,
-      ...backendSession,
+      obraSocial: currentPatient.obraSocial,
+      telefono: currentPatient.phone,
+      nroAfiliado: currentPatient.affiliateNumber,
     }
-
+    //datos hardcodeado para loguear con el único usuario mockeado.
     writeSession(next)
     emitSession()
 
@@ -297,13 +307,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       writeRegistered(accounts)
 
-      const backendSession = await fetchBackendSession({
+      /* const backendSession = await fetchBackendSession({
         dni,
         email: cleanEmail,
         nombre: input.nombre.trim(),
         apellido: input.apellido.trim(),
         password: input.password,
-      })
+      }) */
+      //lo dejo comentado para no pegar al back en el registro para la demo
 
       const next: AuthUser = {
         dni,
@@ -311,9 +322,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         nombre: input.nombre.trim(),
         apellido: input.apellido.trim(),
         isDemo: false,
-        ...backendSession,
+        obraSocial: currentPatient.obraSocial,
+        telefono: currentPatient.phone,
+        nroAfiliado: currentPatient.affiliateNumber,
       }
-
+      //uso datos del usuario mock para la demo.
       writeSession(next)
       emitSession()
 

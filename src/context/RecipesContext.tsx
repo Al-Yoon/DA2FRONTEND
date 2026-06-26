@@ -9,6 +9,7 @@ import {
 import { useAuth } from './AuthContext'
 import { fetchRecipes } from '@/lib/api/recipes'
 import type { Recipe } from '@/lib/types/recipes'
+import { prescriptionHistory } from '@/lib/mock-data'
 
 type RecipesContextValue = {
   recipes: Recipe[]
@@ -26,22 +27,23 @@ export function RecipesProvider({ children }: { children: ReactNode }) {
   const [error, setError] = useState<string | null>(null)
 
   const refreshRecipes = useCallback(async () => {
-    if (!user?.token) {
+    /* if (!user?.token) {
       setError('No hay token disponible')
       return
-    }
+    } */
 
-    setLoading(true)
-    setError(null)
+    //setLoading(true)
+    //setError(null)
     try {
-      const data = await fetchRecipes(user.token)
+      //const data = await fetchRecipes(user.token)
+      const data = prescriptionHistory
       setRecipes(data)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error cargando recetas')
     } finally {
       setLoading(false)
     }
-  }, [user?.token])
+  }, [])
 
   const value = useMemo(
     () => ({ recipes, loading, error, refreshRecipes }),
